@@ -14,9 +14,19 @@ Library.Toggled = true
 Library.MobileLocked = false
 Library.OpenDropdown = nil
 Library.Flags = {}
+Library.ToggleKey = Enum.KeyCode.RightControl
 Library._conns = {}
 Library._allDraw = {}
 Library._dTypes = {}
+Library._wmAutoUpdate = false
+Library._wmGameName = ""
+Library._fps = 0
+Library._fpsTime = 0
+Library._fpsCount = 0
+
+function Library:SetToggleKey(key)
+    self.ToggleKey = key
+end
 
 local T = {
     Accent = Color3.fromRGB(130, 90, 210),
@@ -90,27 +100,53 @@ local function ib(pos,tl,sz) return pos.X>=tl.X and pos.X<=tl.X+sz.X and pos.Y>=
 function Library:CreateWatermark(cfg)
     cfg = cfg or {}
     local txt = cfg.Text or "Library"
-    local tmp = Drawing.new("Text"); tmp.Text=txt; tmp.Size=FSL; tmp.Font=Drawing.Fonts.UI
+    self._wmGameName = cfg.GameName or ""
+    self._wmAutoUpdate = cfg.AutoUpdate ~= false
+    local initTxt = txt
+    if self._wmGameName ~= "" then initTxt = txt .. " | " .. self._wmGameName end
+    if self._wmAutoUpdate then initTxt = initTxt .. " | FPS: 0 | Ping: 0ms" end
+    local tmp = Drawing.new("Text"); tmp.Text=initTxt; tmp.Size=FSL; tmp.Font=Drawing.Fonts.UI
     local tw = tmp.TextBounds.X; tmp:Remove()
-    local wmW=tw+28; local wmH=FSL+14; local wx=12; local wy=topInset+10
+    local wmW=tw+32; local wmH=FSL+14; local wx=12; local wy=topInset+10
     self._wm = {}
+    self._wmBaseText = txt
     self._wm.bg = cr("Square",{Position=Vector2.new(wx,wy),Size=Vector2.new(wmW,wmH),Color=T.WmBg,Filled=true,Visible=true,ZIndex=50000})
     self._wm.bdr = cr("Square",{Position=Vector2.new(wx,wy),Size=Vector2.new(wmW,wmH),Color=T.WinBorder,Filled=false,Thickness=1,Visible=true,ZIndex=50001})
     self._wm.bdrIn = cr("Square",{Position=Vector2.new(wx+1,wy+1),Size=Vector2.new(wmW-2,wmH-2),Color=T.WinBorderInner,Filled=false,Thickness=1,Visible=true,ZIndex=50001})
     self._wm.acc = cr("Line",{From=Vector2.new(wx,wy),To=Vector2.new(wx+wmW,wy),Color=T.Accent,Thickness=2,Visible=true,ZIndex=50002})
-    self._wm.lbl = cr("Text",{Text=txt,Size=FSL,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=T.TextShadow,Position=Vector2.new(wx+14,wy+6),Visible=true,ZIndex=50003})
+    self._wm.lbl = cr("Text",{Text=initTxt,Size=FSL,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=T.TextShadow,Position=Vector2.new(wx+14,wy+6),Visible=true,ZIndex=50003})
     self._wmBottom = wy+wmH+6
     if IsMobile then self:_mkMobile() end
 end
 
 function Library:UpdateWatermark(txt)
     if not self._wm then return end
-    self._wm.lbl.Text=txt
-    local tw=self._wm.lbl.TextBounds.X; local nw=tw+28
+    if txt then self._wmBaseText = txt end
+    self._wm.lbl.Text=txt or self._wm.lbl.Text
+    local tw=self._wm.lbl.TextBounds.X; local nw=tw+32
     self._wm.bg.Size=Vector2.new(nw,self._wm.bg.Size.Y)
     self._wm.bdr.Size=Vector2.new(nw,self._wm.bdr.Size.Y)
     self._wm.bdrIn.Size=Vector2.new(nw-2,self._wm.bdrIn.Size.Y)
     self._wm.acc.To=Vector2.new(self._wm.acc.From.X+nw,self._wm.acc.From.Y)
+end
+
+function Library:_updateWatermarkAuto()
+    if not self._wm or not self._wmAutoUpdate then return end
+    self._fpsCount = self._fpsCount + 1
+    local now = tick()
+    if now - self._fpsTime >= 1 then
+        self._fps = self._fpsCount
+        self._fpsCount = 0
+        self._fpsTime = now
+    end
+    local ping = 0
+    pcall(function() ping = math.floor(Players.LocalPlayer:GetNetworkPing() * 1000) end)
+    local parts = {self._wmBaseText}
+    if self._wmGameName ~= "" then table.insert(parts, self._wmGameName) end
+    table.insert(parts, "FPS: " .. tostring(self._fps))
+    table.insert(parts, "Ping: " .. tostring(ping) .. "ms")
+    local fullTxt = table.concat(parts, " | ")
+    self:UpdateWatermark(fullTxt)
 end
 
 function Library:_mkMobile()
@@ -235,7 +271,8 @@ function Library:CreateWindow(cfg)
             tab._px=tab._px+dt.X; tab._py=tab._py+dt.Y
             for _,sec in ipairs(tab.Sects) do
                 mvAll(sec.D,dt)
-                sec._x=sec._x+dt.X; sec._y=sec._y+dt.Y; sec._esY=sec._esY+dt.Y
+                sec._x=sec._x+dt.X; sec._y=sec._y+dt.Y
+                sec._esY=sec._esY+dt.Y; sec._nY=sec._nY+dt.Y
                 for _,el in ipairs(sec.Elems) do
                     mvAll(el.D,dt)
                     el._ax=el._ax+dt.X; el._ay=el._ay+dt.Y
@@ -531,13 +568,15 @@ function Library:CreateWindow(cfg)
 end
 
 local activeSlider = nil
+local dragInput = nil
+local sliderInput = nil
 
 local function onBegan(input)
     local pos
     if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
         pos=Vector2.new(input.Position.X,input.Position.Y+topInset)
     elseif input.UserInputType==Enum.UserInputType.Keyboard then
-        if input.KeyCode==Enum.KeyCode.RightControl then
+        if input.KeyCode==Library.ToggleKey then
             Library.Toggled=not Library.Toggled
             for _,w in ipairs(Library.Windows) do w:SetVisible(Library.Toggled) end
             return
@@ -565,14 +604,18 @@ local function onBegan(input)
         if not w.Visible then continue end
         if not (IsMobile and Library.MobileLocked) then
             local tp=w.D.tbg.Position; local ts=Vector2.new(w.Size.X-4,TTH)
-            if ib(pos,tp,ts) then w._drag=true; w._dragOff=pos-w.Pos; return end
+            if ib(pos,tp,ts) then
+                w._drag=true; w._dragOff=pos-w.Pos; dragInput=input; return
+            end
         end
         for _,tab in ipairs(w.Tabs) do if tab._click(pos) then return end end
         if w.ActiveTab then
             for _,sec in ipairs(w.ActiveTab.Sects) do
                 for _,el in ipairs(sec.Elems) do
                     if el._click(pos) then
-                        if el.Type=="Slider" and el._dragging then activeSlider=el end
+                        if el.Type=="Slider" and el._dragging then
+                            activeSlider=el; sliderInput=input
+                        end
                         return
                     end
                 end
@@ -582,29 +625,37 @@ local function onBegan(input)
 end
 
 local function onChanged(input)
-    local pos
-    if input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch then
-        pos=Vector2.new(input.Position.X,input.Position.Y+topInset)
-    else return end
-    if activeSlider then activeSlider._updVal(pos); return end
-    for _,w in ipairs(Library.Windows) do
-        if w._drag then
-            local np=pos-w._dragOff; local dt=np-w.Pos; w:_applyDelta(dt); return
+    if input.UserInputType~=Enum.UserInputType.MouseMovement and input.UserInputType~=Enum.UserInputType.Touch then return end
+    local pos=Vector2.new(input.Position.X,input.Position.Y+topInset)
+    if activeSlider and (input==sliderInput or not IsMobile) then
+        activeSlider._updVal(pos); return
+    end
+    if dragInput and (input==dragInput or not IsMobile) then
+        for _,w in ipairs(Library.Windows) do
+            if w._drag then
+                local np=pos-w._dragOff; local dt=np-w.Pos; w:_applyDelta(dt); return
+            end
         end
     end
 end
 
 local function onEnded(input)
     if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
-        activeSlider=nil
-        for _,w in ipairs(Library.Windows) do w._drag=false end
+        if input==sliderInput or not IsMobile then activeSlider=nil; sliderInput=nil end
+        if input==dragInput or not IsMobile then
+            dragInput=nil
+            for _,w in ipairs(Library.Windows) do w._drag=false end
+        end
     end
 end
 
 table.insert(Library._conns, UIS.InputBegan:Connect(onBegan))
 table.insert(Library._conns, UIS.InputChanged:Connect(onChanged))
 table.insert(Library._conns, UIS.InputEnded:Connect(onEnded))
-table.insert(Library._conns, RS.Heartbeat:Connect(function() Library:_tickNotif() end))
+table.insert(Library._conns, RS.Heartbeat:Connect(function()
+    Library:_tickNotif()
+    Library:_updateWatermarkAuto()
+end))
 
 function Library:Destroy()
     for _,c in ipairs(self._conns) do c:Disconnect() end; self._conns={}
