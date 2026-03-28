@@ -488,7 +488,7 @@ local activeSlider = nil
 local function onBegan(input)
     local pos
     if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
-        pos=Vector2.new(input.Position.X,input.Position.Y)
+        pos=Vector2.new(input.Position.X,input.Position.Y+topInset)
     elseif input.UserInputType==Enum.UserInputType.Keyboard then
         if input.KeyCode==Enum.KeyCode.RightControl then
             Library.Toggled=not Library.Toggled
@@ -537,7 +537,7 @@ end
 local function onChanged(input)
     local pos
     if input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch then
-        pos=Vector2.new(input.Position.X,input.Position.Y)
+        pos=Vector2.new(input.Position.X,input.Position.Y+topInset)
     else return end
     if activeSlider then activeSlider._updVal(pos); return end
     for _,w in ipairs(Library.Windows) do
