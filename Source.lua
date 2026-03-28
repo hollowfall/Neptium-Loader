@@ -19,40 +19,49 @@ Library._allDraw = {}
 Library._dTypes = {}
 
 local T = {
-    Accent = Color3.fromRGB(120, 80, 200),
-    WinBg = Color3.fromRGB(20, 20, 32),
-    WinBorder = Color3.fromRGB(55, 50, 80),
-    TitleBg = Color3.fromRGB(26, 26, 40),
-    TabBg = Color3.fromRGB(24, 24, 38),
-    TabBorder = Color3.fromRGB(50, 48, 72),
-    SectBg = Color3.fromRGB(26, 26, 40),
-    SectBorder = Color3.fromRGB(50, 48, 72),
-    ElemBg = Color3.fromRGB(32, 32, 48),
-    ElemBorder = Color3.fromRGB(55, 52, 78),
-    Text = Color3.fromRGB(225, 225, 235),
-    Dim = Color3.fromRGB(160, 158, 175),
-    OnColor = Color3.fromRGB(120, 80, 200),
-    OffColor = Color3.fromRGB(40, 40, 58),
-    DDBg = Color3.fromRGB(28, 28, 44),
-    NotBg = Color3.fromRGB(22, 22, 36),
-    WmBg = Color3.fromRGB(20, 20, 32),
+    Accent = Color3.fromRGB(130, 90, 210),
+    AccentDark = Color3.fromRGB(90, 60, 160),
+    WinBg = Color3.fromRGB(18, 18, 28),
+    WinBorder = Color3.fromRGB(60, 55, 90),
+    WinBorderInner = Color3.fromRGB(35, 33, 50),
+    TitleBg = Color3.fromRGB(22, 22, 34),
+    TabBg = Color3.fromRGB(20, 20, 32),
+    TabBorder = Color3.fromRGB(55, 50, 80),
+    SectBg = Color3.fromRGB(24, 24, 36),
+    SectHeaderBg = Color3.fromRGB(28, 28, 42),
+    SectBorder = Color3.fromRGB(55, 52, 80),
+    ElemBg = Color3.fromRGB(30, 30, 44),
+    ElemBorder = Color3.fromRGB(58, 55, 82),
+    ElemBorderInner = Color3.fromRGB(22, 22, 34),
+    Divider = Color3.fromRGB(42, 40, 60),
+    Text = Color3.fromRGB(240, 240, 248),
+    TextShadow = Color3.new(0, 0, 0),
+    Dim = Color3.fromRGB(175, 172, 195),
+    OnColor = Color3.fromRGB(130, 90, 210),
+    OffColor = Color3.fromRGB(38, 38, 54),
+    DDBg = Color3.fromRGB(26, 26, 40),
+    DDBorder = Color3.fromRGB(55, 52, 80),
+    NotBg = Color3.fromRGB(20, 20, 32),
+    WmBg = Color3.fromRGB(18, 18, 28),
 }
 
-local S = 1
-if IsMobile then S = math.clamp(math.min(Viewport.X/610, Viewport.Y/520), 0.45, 1) end
-local WW = math.floor(570*S)
-local WH = math.floor(420*S)
-local FS = math.floor(13*S)
-local FSS = math.floor(11*S)
-local FSL = math.floor(15*S)
-local EH = math.floor(20*S)
-local PAD = math.floor(6*S)
-local TTH = math.floor(24*S)
-local TBH = math.floor(22*S)
-local SHH = math.floor(20*S)
-local SLH = math.floor(10*S)
-local TGS = math.floor(14*S)
-local BTH = math.floor(24*S)
+local SC = 1
+if IsMobile then SC = math.clamp(math.min(Viewport.X/610, Viewport.Y/520), 0.45, 1) end
+local WW = math.floor(580*SC)
+local WH = math.floor(430*SC)
+local FS = math.floor(14*SC)
+local FSS = math.floor(12*SC)
+local FSL = math.floor(16*SC)
+local FSTITLE = math.floor(17*SC)
+local EH = math.floor(22*SC)
+local PAD = math.floor(8*SC)
+local TTH = math.floor(28*SC)
+local TBH = math.floor(24*SC)
+local SHH = math.floor(22*SC)
+local SLH = math.floor(12*SC)
+local TGS = math.floor(16*SC)
+local BTH = math.floor(26*SC)
+local DIVH = 1
 
 local topInset = 36
 pcall(function() topInset = game:GetService("GuiService"):GetGuiInset().Y end)
@@ -83,38 +92,40 @@ function Library:CreateWatermark(cfg)
     local txt = cfg.Text or "Library"
     local tmp = Drawing.new("Text"); tmp.Text=txt; tmp.Size=FSL; tmp.Font=Drawing.Fonts.UI
     local tw = tmp.TextBounds.X; tmp:Remove()
-    local wmW=tw+24; local wmH=FSL+12; local wx=10; local wy=topInset+8
+    local wmW=tw+28; local wmH=FSL+14; local wx=12; local wy=topInset+10
     self._wm = {}
     self._wm.bg = cr("Square",{Position=Vector2.new(wx,wy),Size=Vector2.new(wmW,wmH),Color=T.WmBg,Filled=true,Visible=true,ZIndex=50000})
     self._wm.bdr = cr("Square",{Position=Vector2.new(wx,wy),Size=Vector2.new(wmW,wmH),Color=T.WinBorder,Filled=false,Thickness=1,Visible=true,ZIndex=50001})
+    self._wm.bdrIn = cr("Square",{Position=Vector2.new(wx+1,wy+1),Size=Vector2.new(wmW-2,wmH-2),Color=T.WinBorderInner,Filled=false,Thickness=1,Visible=true,ZIndex=50001})
     self._wm.acc = cr("Line",{From=Vector2.new(wx,wy),To=Vector2.new(wx+wmW,wy),Color=T.Accent,Thickness=2,Visible=true,ZIndex=50002})
-    self._wm.lbl = cr("Text",{Text=txt,Size=FSL,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=Color3.new(0,0,0),Position=Vector2.new(wx+12,wy+5),Visible=true,ZIndex=50003})
-    self._wmBottom = wy+wmH+4
+    self._wm.lbl = cr("Text",{Text=txt,Size=FSL,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=T.TextShadow,Position=Vector2.new(wx+14,wy+6),Visible=true,ZIndex=50003})
+    self._wmBottom = wy+wmH+6
     if IsMobile then self:_mkMobile() end
 end
 
 function Library:UpdateWatermark(txt)
     if not self._wm then return end
     self._wm.lbl.Text=txt
-    local tw=self._wm.lbl.TextBounds.X; local nw=tw+24
+    local tw=self._wm.lbl.TextBounds.X; local nw=tw+28
     self._wm.bg.Size=Vector2.new(nw,self._wm.bg.Size.Y)
     self._wm.bdr.Size=Vector2.new(nw,self._wm.bdr.Size.Y)
+    self._wm.bdrIn.Size=Vector2.new(nw-2,self._wm.bdrIn.Size.Y)
     self._wm.acc.To=Vector2.new(self._wm.acc.From.X+nw,self._wm.acc.From.Y)
 end
 
 function Library:_mkMobile()
-    local y=self._wmBottom or (topInset+40)
-    local bw,bh=math.floor(72*S),math.floor(28*S)
+    local y=self._wmBottom or (topInset+44)
+    local bw,bh=math.floor(76*SC),math.floor(30*SC)
     self._mobTog={
-        bg=cr("Square",{Position=Vector2.new(10,y),Size=Vector2.new(bw,bh),Color=T.ElemBg,Filled=true,Visible=true,ZIndex=50001}),
-        bdr=cr("Square",{Position=Vector2.new(10,y),Size=Vector2.new(bw,bh),Color=T.Accent,Filled=false,Thickness=1,Visible=true,ZIndex=50002}),
-        lbl=cr("Text",{Text="Toggle UI",Size=FSS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=Color3.new(0,0,0),Position=Vector2.new(10+bw/2,y+bh/2-FSS/2),Center=true,Visible=true,ZIndex=50003}),
+        bg=cr("Square",{Position=Vector2.new(12,y),Size=Vector2.new(bw,bh),Color=T.ElemBg,Filled=true,Visible=true,ZIndex=50001}),
+        bdr=cr("Square",{Position=Vector2.new(12,y),Size=Vector2.new(bw,bh),Color=T.Accent,Filled=false,Thickness=1,Visible=true,ZIndex=50002}),
+        lbl=cr("Text",{Text="Toggle UI",Size=FSS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=T.TextShadow,Position=Vector2.new(12+bw/2,y+bh/2-FSS/2),Center=true,Visible=true,ZIndex=50003}),
     }
-    local lx=10+bw+6
+    local lx=12+bw+8
     self._mobLck={
         bg=cr("Square",{Position=Vector2.new(lx,y),Size=Vector2.new(bw,bh),Color=T.ElemBg,Filled=true,Visible=true,ZIndex=50001}),
         bdr=cr("Square",{Position=Vector2.new(lx,y),Size=Vector2.new(bw,bh),Color=T.Accent,Filled=false,Thickness=1,Visible=true,ZIndex=50002}),
-        lbl=cr("Text",{Text="Lock: OFF",Size=FSS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=Color3.new(0,0,0),Position=Vector2.new(lx+bw/2,y+bh/2-FSS/2),Center=true,Visible=true,ZIndex=50003}),
+        lbl=cr("Text",{Text="Lock: OFF",Size=FSS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=T.TextShadow,Position=Vector2.new(lx+bw/2,y+bh/2-FSS/2),Center=true,Visible=true,ZIndex=50003}),
     }
 end
 
@@ -139,15 +150,17 @@ function Library:Notify(cfg)
     local ttl=cfg.Title or "Notice"
     local cnt=cfg.Content or ""
     local dur=cfg.Duration or 3
-    local nw,nh=math.floor(220*S),math.floor(52*S)
-    local nx=Viewport.X-nw-12
-    local ny=10+#self.Notifications*(nh+6)
+    local nw,nh=math.floor(240*SC),math.floor(56*SC)
+    local nx=Viewport.X-nw-14
+    local ny=topInset+10+#self.Notifications*(nh+8)
     local n={d={},_exp=tick()+dur}
     n.d.bg=cr("Square",{Position=Vector2.new(nx,ny),Size=Vector2.new(nw,nh),Color=T.NotBg,Filled=true,Visible=true,ZIndex=60000})
-    n.d.bdr=cr("Square",{Position=Vector2.new(nx,ny),Size=Vector2.new(nw,nh),Color=T.Accent,Filled=false,Thickness=1,Visible=true,ZIndex=60001})
+    n.d.bdr=cr("Square",{Position=Vector2.new(nx,ny),Size=Vector2.new(nw,nh),Color=T.WinBorder,Filled=false,Thickness=1,Visible=true,ZIndex=60001})
+    n.d.bdrIn=cr("Square",{Position=Vector2.new(nx+1,ny+1),Size=Vector2.new(nw-2,nh-2),Color=T.WinBorderInner,Filled=false,Thickness=1,Visible=true,ZIndex=60001})
     n.d.acc=cr("Line",{From=Vector2.new(nx,ny),To=Vector2.new(nx,ny+nh),Color=T.Accent,Thickness=3,Visible=true,ZIndex=60002})
-    n.d.ttl=cr("Text",{Text=ttl,Size=FS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=Color3.new(0,0,0),Position=Vector2.new(nx+10,ny+4),Visible=true,ZIndex=60003})
-    n.d.cnt=cr("Text",{Text=cnt,Size=FSS,Font=Drawing.Fonts.UI,Color=T.Dim,Outline=true,OutlineColor=Color3.new(0,0,0),Position=Vector2.new(nx+10,ny+6+FS),Visible=true,ZIndex=60003})
+    n.d.ttl=cr("Text",{Text=ttl,Size=FS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=T.TextShadow,Position=Vector2.new(nx+12,ny+6),Visible=true,ZIndex=60003})
+    n.d.div=cr("Line",{From=Vector2.new(nx+10,ny+8+FS),To=Vector2.new(nx+nw-10,ny+8+FS),Color=T.Divider,Thickness=1,Visible=true,ZIndex=60003})
+    n.d.cnt=cr("Text",{Text=cnt,Size=FSS,Font=Drawing.Fonts.UI,Color=T.Dim,Outline=true,OutlineColor=T.TextShadow,Position=Vector2.new(nx+12,ny+12+FS),Visible=true,ZIndex=60003})
     table.insert(self.Notifications,n)
 end
 
@@ -160,12 +173,15 @@ function Library:_tickNotif()
         end
     end
     if dirty then
-        local nh=math.floor(52*S)
+        local nh=math.floor(56*SC)
         for i,n in ipairs(self.Notifications) do
-            local ny=10+(i-1)*(nh+6); local nx=n.d.bg.Position.X
+            local ny=topInset+10+(i-1)*(nh+8); local nx=n.d.bg.Position.X
             n.d.bg.Position=Vector2.new(nx,ny); n.d.bdr.Position=Vector2.new(nx,ny)
+            n.d.bdrIn.Position=Vector2.new(nx+1,ny+1)
             n.d.acc.From=Vector2.new(nx,ny); n.d.acc.To=Vector2.new(nx,ny+nh)
-            n.d.ttl.Position=Vector2.new(nx+10,ny+4); n.d.cnt.Position=Vector2.new(nx+10,ny+6+FS)
+            n.d.ttl.Position=Vector2.new(nx+12,ny+6)
+            n.d.div.From=Vector2.new(nx+10,ny+8+FS); n.d.div.To=Vector2.new(nx+n.d.bg.Size.X-10,ny+8+FS)
+            n.d.cnt.Position=Vector2.new(nx+12,ny+12+FS)
         end
     end
 end
@@ -185,14 +201,17 @@ function Library:CreateWindow(cfg)
     local z=1000
     w.D={}
     w.D.bg=cr("Square",{Position=p,Size=s,Color=T.WinBg,Filled=true,Visible=true,ZIndex=z})
-    w.D.bdr=cr("Square",{Position=p,Size=s,Color=T.WinBorder,Filled=false,Thickness=1,Visible=true,ZIndex=z+1})
-    w.D.atop=cr("Line",{From=p,To=Vector2.new(p.X+s.X,p.Y),Color=T.Accent,Thickness=2,Visible=true,ZIndex=z+5})
-    w.D.tbg=cr("Square",{Position=Vector2.new(p.X,p.Y+2),Size=Vector2.new(s.X,TTH),Color=T.TitleBg,Filled=true,Visible=true,ZIndex=z+2})
-    w.D.ttx=cr("Text",{Text=w.Title,Size=FSL,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=Color3.new(0,0,0),Position=Vector2.new(p.X+8,p.Y+5),Visible=true,ZIndex=z+3})
-    w.D.tbbg=cr("Square",{Position=Vector2.new(p.X,p.Y+2+TTH),Size=Vector2.new(s.X,TBH),Color=T.TabBg,Filled=true,Visible=true,ZIndex=z+2})
-    w.D.tbln=cr("Line",{From=Vector2.new(p.X,p.Y+2+TTH+TBH),To=Vector2.new(p.X+s.X,p.Y+2+TTH+TBH),Color=T.TabBorder,Thickness=1,Visible=true,ZIndex=z+3})
-    w._cY=p.Y+2+TTH+TBH+2
-    w._cH=s.Y-(2+TTH+TBH+4)
+    w.D.bdr=cr("Square",{Position=p,Size=s,Color=T.WinBorder,Filled=false,Thickness=1,Visible=true,ZIndex=z+6})
+    w.D.bdrIn=cr("Square",{Position=Vector2.new(p.X+1,p.Y+1),Size=Vector2.new(s.X-2,s.Y-2),Color=T.WinBorderInner,Filled=false,Thickness=1,Visible=true,ZIndex=z+5})
+    w.D.atop=cr("Line",{From=p,To=Vector2.new(p.X+s.X,p.Y),Color=T.Accent,Thickness=2,Visible=true,ZIndex=z+7})
+    w.D.tbg=cr("Square",{Position=Vector2.new(p.X+2,p.Y+2),Size=Vector2.new(s.X-4,TTH),Color=T.TitleBg,Filled=true,Visible=true,ZIndex=z+2})
+    w.D.ttx=cr("Text",{Text=w.Title,Size=FSTITLE,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=T.TextShadow,Position=Vector2.new(p.X+10,p.Y+6),Visible=true,ZIndex=z+3})
+    w.D.tdiv=cr("Line",{From=Vector2.new(p.X+2,p.Y+2+TTH),To=Vector2.new(p.X+s.X-2,p.Y+2+TTH),Color=T.Divider,Thickness=1,Visible=true,ZIndex=z+3})
+    w.D.tbbg=cr("Square",{Position=Vector2.new(p.X+2,p.Y+2+TTH+1),Size=Vector2.new(s.X-4,TBH),Color=T.TabBg,Filled=true,Visible=true,ZIndex=z+2})
+    w.D.tbln=cr("Line",{From=Vector2.new(p.X+2,p.Y+2+TTH+1+TBH),To=Vector2.new(p.X+s.X-2,p.Y+2+TTH+1+TBH),Color=T.TabBorder,Thickness=1,Visible=true,ZIndex=z+3})
+    w.D.contentBg=cr("Square",{Position=Vector2.new(p.X+2,p.Y+2+TTH+1+TBH+1),Size=Vector2.new(s.X-4,s.Y-TTH-TBH-7),Color=T.WinBg,Filled=true,Visible=true,ZIndex=z+1})
+    w._cY=p.Y+2+TTH+1+TBH+2
+    w._cH=s.Y-(TTH+TBH+8)
 
     function w:SetVisible(v)
         self.Visible=v; vis(self.D,v)
@@ -230,13 +249,13 @@ function Library:CreateWindow(cfg)
     function w:CreateTab(name)
         local tab={}; tab.Name=name or "Tab"; tab.Sects={}; tab.D={}
         local tmp=Drawing.new("Text"); tmp.Text=name; tmp.Size=FS; tmp.Font=Drawing.Fonts.UI
-        tab._tw=math.floor(tmp.TextBounds.X+16*S); tmp:Remove()
-        local tx=w.Pos.X+4
-        for _,t in ipairs(w.Tabs) do tx=tx+t._tw+4 end
-        local ty=w.Pos.Y+2+TTH
+        tab._tw=math.floor(tmp.TextBounds.X+20*SC); tmp:Remove()
+        local tx=w.Pos.X+6
+        for _,t in ipairs(w.Tabs) do tx=tx+t._tw+6 end
+        local ty=w.Pos.Y+2+TTH+1
         tab._px=tx; tab._py=ty
-        tab.D.lbl=cr("Text",{Text=name,Size=FS,Font=Drawing.Fonts.UI,Color=T.Dim,Outline=true,OutlineColor=Color3.new(0,0,0),Position=Vector2.new(tx+math.floor(tab._tw/2),ty+4),Center=true,Visible=true,ZIndex=1010})
-        tab.D.uln=cr("Line",{From=Vector2.new(tx,ty+TBH-2),To=Vector2.new(tx+tab._tw,ty+TBH-2),Color=T.Accent,Thickness=2,Visible=false,ZIndex=1011})
+        tab.D.lbl=cr("Text",{Text=name,Size=FS,Font=Drawing.Fonts.UI,Color=T.Dim,Outline=true,OutlineColor=T.TextShadow,Position=Vector2.new(tx+math.floor(tab._tw/2),ty+5),Center=true,Visible=true,ZIndex=1010})
+        tab.D.uln=cr("Line",{From=Vector2.new(tx+2,ty+TBH-2),To=Vector2.new(tx+tab._tw-2,ty+TBH-2),Color=T.Accent,Thickness=2,Visible=false,ZIndex=1011})
         table.insert(w.Tabs,tab)
 
         local function activateTab(t)
@@ -264,39 +283,53 @@ function Library:CreateWindow(cfg)
         function tab:CreateSection(scfg)
             scfg=scfg or {}
             local sec={}; sec.Name=scfg.Name or "Section"; sec.Side=scfg.Side or "Left"; sec.Elems={}; sec.D={}
-            local colW=math.floor((w.Size.X-PAD*3)/2)
+            local colW=math.floor((w.Size.X-PAD*3-4)/2)
             local px
-            if sec.Side=="Left" then px=w.Pos.X+PAD else px=w.Pos.X+PAD*2+colW end
+            if sec.Side=="Left" then px=w.Pos.X+PAD+2 else px=w.Pos.X+PAD*2+colW+2 end
             local py=w._cY+PAD
             for _,s in ipairs(tab.Sects) do
                 if s.Side==sec.Side then py=py+s._totH+PAD end
             end
-            sec._x=px; sec._y=py; sec._w=colW; sec._totH=SHH+4; sec._esY=py+SHH+2
+            sec._x=px; sec._y=py; sec._w=colW; sec._totH=SHH+6; sec._esY=py+SHH+4
             local isAct=w.ActiveTab==tab
-            sec.D.bdr=cr("Square",{Position=Vector2.new(px,py),Size=Vector2.new(colW,sec._totH),Color=T.SectBorder,Filled=false,Thickness=1,Visible=isAct,ZIndex=1020})
-            sec.D.hdr=cr("Text",{Text=sec.Name,Size=FS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=Color3.new(0,0,0),Position=Vector2.new(px+6,py+3),Visible=isAct,ZIndex=1021})
+            sec.D.bg=cr("Square",{Position=Vector2.new(px,py),Size=Vector2.new(colW,sec._totH),Color=T.SectBg,Filled=true,Visible=isAct,ZIndex=1018})
+            sec.D.bdr=cr("Square",{Position=Vector2.new(px,py),Size=Vector2.new(colW,sec._totH),Color=T.SectBorder,Filled=false,Thickness=1,Visible=isAct,ZIndex=1022})
+            sec.D.bdrIn=cr("Square",{Position=Vector2.new(px+1,py+1),Size=Vector2.new(colW-2,sec._totH-2),Color=T.ElemBorderInner,Filled=false,Thickness=1,Visible=isAct,ZIndex=1021})
+            sec.D.hdrBg=cr("Square",{Position=Vector2.new(px+1,py+1),Size=Vector2.new(colW-2,SHH),Color=T.SectHeaderBg,Filled=true,Visible=isAct,ZIndex=1019})
+            sec.D.hdr=cr("Text",{Text=sec.Name,Size=FS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=T.TextShadow,Position=Vector2.new(px+8,py+4),Visible=isAct,ZIndex=1023})
+            sec.D.hdrDiv=cr("Line",{From=Vector2.new(px+1,py+SHH+1),To=Vector2.new(px+colW-1,py+SHH+1),Color=T.SectBorder,Thickness=1,Visible=isAct,ZIndex=1023})
             sec._nY=sec._esY
             table.insert(tab.Sects,sec)
 
             local function recalcH()
-                local h=SHH+4
-                for _,el in ipairs(sec.Elems) do h=h+el._h+3 end
-                sec._totH=h; sec.D.bdr.Size=Vector2.new(sec._w,h)
+                local h=SHH+6
+                for _,el in ipairs(sec.Elems) do h=h+el._h+4 end
+                h=h+2
+                sec._totH=h
+                sec.D.bg.Size=Vector2.new(sec._w,h)
+                sec.D.bdr.Size=Vector2.new(sec._w,h)
+                sec.D.bdrIn.Size=Vector2.new(sec._w-2,h-2)
             end
 
             local elZ=1030
-            local ew=colW-8
+            local ew=colW-12
+
+            local function addDivider(sec2, y2)
+                local dv = cr("Line",{From=Vector2.new(sec2._x+6,y2),To=Vector2.new(sec2._x+sec2._w-6,y2),Color=T.Divider,Thickness=1,Visible=isAct,ZIndex=elZ})
+                return dv
+            end
 
             function sec:CreateToggle(ecfg)
                 ecfg=ecfg or {}
                 local el={}; el.Type="Toggle"; el.Name=ecfg.Name or "Toggle"
                 el.Value=ecfg.Default or false; el.CB=ecfg.Callback or function()end
                 el.Flag=ecfg.Flag; el.D={}; el._h=EH
-                local x,y=sec._x+4,sec._nY
+                local x,y=sec._x+6,sec._nY
                 el._ax=x; el._ay=y; el._aw=ew
-                el.D.lbl=cr("Text",{Text=el.Name,Size=FS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=Color3.new(0,0,0),Position=Vector2.new(x,y+2),Visible=isAct,ZIndex=elZ})
-                el.D.box=cr("Square",{Position=Vector2.new(x+ew-TGS-2,y+2),Size=Vector2.new(TGS,TGS),Color=el.Value and T.OnColor or T.OffColor,Filled=true,Visible=isAct,ZIndex=elZ+1})
-                el.D.bbdr=cr("Square",{Position=Vector2.new(x+ew-TGS-2,y+2),Size=Vector2.new(TGS,TGS),Color=T.ElemBorder,Filled=false,Thickness=1,Visible=isAct,ZIndex=elZ+2})
+                el.D.lbl=cr("Text",{Text=el.Name,Size=FS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=T.TextShadow,Position=Vector2.new(x,y+3),Visible=isAct,ZIndex=elZ+1})
+                el.D.boxOuter=cr("Square",{Position=Vector2.new(x+ew-TGS-2,y+2),Size=Vector2.new(TGS,TGS),Color=T.ElemBorder,Filled=false,Thickness=1,Visible=isAct,ZIndex=elZ+3})
+                el.D.box=cr("Square",{Position=Vector2.new(x+ew-TGS,y+3),Size=Vector2.new(TGS-2,TGS-2),Color=el.Value and T.OnColor or T.OffColor,Filled=true,Visible=isAct,ZIndex=elZ+2})
+                if #sec.Elems > 0 then el.D.div=addDivider(sec,y-2) end
                 el._click=function(pos)
                     if ib(pos,Vector2.new(el._ax,el._ay),Vector2.new(el._aw,EH)) then
                         el.Value=not el.Value
@@ -305,7 +338,7 @@ function Library:CreateWindow(cfg)
                         el.CB(el.Value); return true
                     end; return false
                 end
-                sec._nY=sec._nY+EH+3; table.insert(sec.Elems,el); recalcH()
+                sec._nY=sec._nY+EH+4; table.insert(sec.Elems,el); recalcH()
                 if el.Flag then Library.Flags[el.Flag]=el.Value end; return el
             end
 
@@ -315,16 +348,18 @@ function Library:CreateWindow(cfg)
                 el.Min=ecfg.Min or 0; el.Max=ecfg.Max or 100
                 el.Value=ecfg.Default or el.Min; el.Inc=ecfg.Increment or 1
                 el.Suf=ecfg.Suffix or ""; el.CB=ecfg.Callback or function()end
-                el.Flag=ecfg.Flag; el.D={}; el._h=EH+SLH+4; el._dragging=false
-                local x,y=sec._x+4,sec._nY
+                el.Flag=ecfg.Flag; el.D={}; el._h=EH+SLH+6; el._dragging=false
+                local x,y=sec._x+6,sec._nY
                 el._ax=x; el._ay=y; el._aw=ew
                 el._tx=x+2; el._ty=y+EH+2; el._tw2=ew-4
                 local frac=(el.Value-el.Min)/(el.Max-el.Min)
                 local fillW=math.max(math.floor(frac*el._tw2),1)
-                el.D.lbl=cr("Text",{Text=el.Name..": "..el.Value..el.Suf,Size=FS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=Color3.new(0,0,0),Position=Vector2.new(x,y),Visible=isAct,ZIndex=elZ})
+                if #sec.Elems > 0 then el.D.div=addDivider(sec,y-2) end
+                el.D.lbl=cr("Text",{Text=el.Name..": "..el.Value..el.Suf,Size=FS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=T.TextShadow,Position=Vector2.new(x,y+1),Visible=isAct,ZIndex=elZ+1})
+                el.D.trkOuter=cr("Square",{Position=Vector2.new(el._tx-1,el._ty-1),Size=Vector2.new(el._tw2+2,SLH+2),Color=T.ElemBorder,Filled=false,Thickness=1,Visible=isAct,ZIndex=elZ+2})
                 el.D.trk=cr("Square",{Position=Vector2.new(el._tx,el._ty),Size=Vector2.new(el._tw2,SLH),Color=T.ElemBg,Filled=true,Visible=isAct,ZIndex=elZ})
-                el.D.tbdr=cr("Square",{Position=Vector2.new(el._tx,el._ty),Size=Vector2.new(el._tw2,SLH),Color=T.ElemBorder,Filled=false,Thickness=1,Visible=isAct,ZIndex=elZ+1})
                 el.D.fill=cr("Square",{Position=Vector2.new(el._tx,el._ty),Size=Vector2.new(fillW,SLH),Color=T.OnColor,Filled=true,Visible=isAct,ZIndex=elZ+1})
+                el.D.valTxt=cr("Text",{Text=tostring(el.Value)..el.Suf,Size=FSS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=T.TextShadow,Position=Vector2.new(el._tx+el._tw2/2,el._ty-1),Center=true,Visible=isAct,ZIndex=elZ+3})
                 el._updVal=function(pos)
                     local rel=math.clamp((pos.X-el._tx)/el._tw2,0,1)
                     local raw=el.Min+rel*(el.Max-el.Min)
@@ -333,15 +368,16 @@ function Library:CreateWindow(cfg)
                     local fw=math.max(math.floor(((el.Value-el.Min)/(el.Max-el.Min))*el._tw2),1)
                     el.D.fill.Size=Vector2.new(fw,SLH)
                     el.D.lbl.Text=el.Name..": "..el.Value..el.Suf
+                    el.D.valTxt.Text=tostring(el.Value)..el.Suf
                     if el.Flag then Library.Flags[el.Flag]=el.Value end
                     el.CB(el.Value)
                 end
                 el._click=function(pos)
-                    if ib(pos,Vector2.new(el._tx,el._ty),Vector2.new(el._tw2,SLH)) then
+                    if ib(pos,Vector2.new(el._tx-1,el._ty-1),Vector2.new(el._tw2+2,SLH+2)) then
                         el._dragging=true; el._updVal(pos); return true
                     end; return false
                 end
-                sec._nY=sec._nY+el._h+3; table.insert(sec.Elems,el); recalcH()
+                sec._nY=sec._nY+el._h+4; table.insert(sec.Elems,el); recalcH()
                 if el.Flag then Library.Flags[el.Flag]=el.Value end; return el
             end
 
@@ -350,30 +386,36 @@ function Library:CreateWindow(cfg)
                 local el={}; el.Type="Dropdown"; el.Name=ecfg.Name or "Dropdown"
                 el.Options=ecfg.Options or {}; el.Value=ecfg.Default or (el.Options[1] or "")
                 el.CB=ecfg.Callback or function()end; el.Flag=ecfg.Flag
-                el.D={}; el._h=EH+EH+4; el._open=false; el._optD={}
-                local x,y=sec._x+4,sec._nY
+                el.D={}; el._h=EH+EH+6; el._open=false; el._optD={}
+                local x,y=sec._x+6,sec._nY
                 el._ax=x; el._ay=y; el._aw=ew
-                el._bx=x; el._by=y+EH+2; el._bw=ew
-                el.D.lbl=cr("Text",{Text=el.Name,Size=FS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=Color3.new(0,0,0),Position=Vector2.new(x,y),Visible=isAct,ZIndex=elZ})
-                el.D.box=cr("Square",{Position=Vector2.new(x,y+EH+2),Size=Vector2.new(ew,EH),Color=T.ElemBg,Filled=true,Visible=isAct,ZIndex=elZ})
-                el.D.bbdr=cr("Square",{Position=Vector2.new(x,y+EH+2),Size=Vector2.new(ew,EH),Color=T.ElemBorder,Filled=false,Thickness=1,Visible=isAct,ZIndex=elZ+1})
-                el.D.sel=cr("Text",{Text=tostring(el.Value),Size=FSS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=Color3.new(0,0,0),Position=Vector2.new(x+4,y+EH+4),Visible=isAct,ZIndex=elZ+2})
-                local ax=x+ew-12; local ay=y+EH+6
-                el.D.arr=cr("Triangle",{PointA=Vector2.new(ax,ay),PointB=Vector2.new(ax+8,ay),PointC=Vector2.new(ax+4,ay+6),Color=T.Dim,Filled=true,Visible=isAct,ZIndex=elZ+2})
+                el._bx=x; el._by=y+EH+3; el._bw=ew
+                if #sec.Elems > 0 then el.D.div=addDivider(sec,y-2) end
+                el.D.lbl=cr("Text",{Text=el.Name,Size=FS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=T.TextShadow,Position=Vector2.new(x,y+1),Visible=isAct,ZIndex=elZ+1})
+                el.D.box=cr("Square",{Position=Vector2.new(x,y+EH+3),Size=Vector2.new(ew,EH),Color=T.ElemBg,Filled=true,Visible=isAct,ZIndex=elZ})
+                el.D.bbdr=cr("Square",{Position=Vector2.new(x,y+EH+3),Size=Vector2.new(ew,EH),Color=T.ElemBorder,Filled=false,Thickness=1,Visible=isAct,ZIndex=elZ+2})
+                el.D.sel=cr("Text",{Text=tostring(el.Value),Size=FSS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=T.TextShadow,Position=Vector2.new(x+6,y+EH+6),Visible=isAct,ZIndex=elZ+3})
+                local ax=x+ew-14; local ay=y+EH+8
+                el.D.arr=cr("Triangle",{PointA=Vector2.new(ax,ay),PointB=Vector2.new(ax+8,ay),PointC=Vector2.new(ax+4,ay+5),Color=T.Dim,Filled=true,Visible=isAct,ZIndex=elZ+3})
                 el._close=function()
                     el._open=false
-                    for _,od in ipairs(el._optD) do od.bg:Remove(); od.lbl:Remove() end
+                    for _,od in ipairs(el._optD) do od.bg:Remove(); od.bdr:Remove(); od.lbl:Remove(); if od.dvl then od.dvl:Remove() end end
                     el._optD={}
                     if Library.OpenDropdown==el then Library.OpenDropdown=nil end
                 end
                 el._openDD=function()
                     if Library.OpenDropdown and Library.OpenDropdown~=el then Library.OpenDropdown._close() end
                     el._open=true; Library.OpenDropdown=el
+                    local totalH = #el.Options * EH
                     for i,opt in ipairs(el.Options) do
                         local oy=el._by+EH+(i-1)*EH
                         local od={}
                         od.bg=cr("Square",{Position=Vector2.new(el._bx,oy),Size=Vector2.new(el._bw,EH),Color=T.DDBg,Filled=true,Visible=true,ZIndex=55000})
-                        od.lbl=cr("Text",{Text=tostring(opt),Size=FSS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=Color3.new(0,0,0),Position=Vector2.new(el._bx+4,oy+3),Visible=true,ZIndex=55001})
+                        od.bdr=cr("Square",{Position=Vector2.new(el._bx,oy),Size=Vector2.new(el._bw,EH),Color=T.DDBorder,Filled=false,Thickness=1,Visible=true,ZIndex=55002})
+                        od.lbl=cr("Text",{Text=tostring(opt),Size=FSS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=T.TextShadow,Position=Vector2.new(el._bx+6,oy+4),Visible=true,ZIndex=55003})
+                        if i < #el.Options then
+                            od.dvl=cr("Line",{From=Vector2.new(el._bx+4,oy+EH),To=Vector2.new(el._bx+el._bw-4,oy+EH),Color=T.Divider,Thickness=1,Visible=true,ZIndex=55001})
+                        end
                         od._val=opt
                         table.insert(el._optD,od)
                     end
@@ -394,7 +436,7 @@ function Library:CreateWindow(cfg)
                     end
                     return false
                 end
-                sec._nY=sec._nY+el._h+3; table.insert(sec.Elems,el); recalcH()
+                sec._nY=sec._nY+el._h+4; table.insert(sec.Elems,el); recalcH()
                 if el.Flag then Library.Flags[el.Flag]=el.Value end; return el
             end
 
@@ -402,11 +444,13 @@ function Library:CreateWindow(cfg)
                 ecfg=ecfg or {}
                 local el={}; el.Type="Button"; el.Name=ecfg.Name or "Button"
                 el.CB=ecfg.Callback or function()end; el.D={}; el._h=BTH
-                local x,y=sec._x+4,sec._nY
+                local x,y=sec._x+6,sec._nY
                 el._ax=x; el._ay=y; el._aw=ew
+                if #sec.Elems > 0 then el.D.div=addDivider(sec,y-2) end
                 el.D.bg=cr("Square",{Position=Vector2.new(x,y),Size=Vector2.new(ew,BTH),Color=T.ElemBg,Filled=true,Visible=isAct,ZIndex=elZ})
-                el.D.bbdr=cr("Square",{Position=Vector2.new(x,y),Size=Vector2.new(ew,BTH),Color=T.ElemBorder,Filled=false,Thickness=1,Visible=isAct,ZIndex=elZ+1})
-                el.D.lbl=cr("Text",{Text=el.Name,Size=FS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=Color3.new(0,0,0),Position=Vector2.new(x+math.floor(ew/2),y+4),Center=true,Visible=isAct,ZIndex=elZ+2})
+                el.D.bbdr=cr("Square",{Position=Vector2.new(x,y),Size=Vector2.new(ew,BTH),Color=T.ElemBorder,Filled=false,Thickness=1,Visible=isAct,ZIndex=elZ+2})
+                el.D.bbdrIn=cr("Square",{Position=Vector2.new(x+1,y+1),Size=Vector2.new(ew-2,BTH-2),Color=T.ElemBorderInner,Filled=false,Thickness=1,Visible=isAct,ZIndex=elZ+1})
+                el.D.lbl=cr("Text",{Text=el.Name,Size=FS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=T.TextShadow,Position=Vector2.new(x+math.floor(ew/2),y+5),Center=true,Visible=isAct,ZIndex=elZ+3})
                 el._click=function(pos)
                     if ib(pos,Vector2.new(el._ax,el._ay),Vector2.new(el._aw,BTH)) then
                         el.D.bg.Color=T.Accent
@@ -414,17 +458,18 @@ function Library:CreateWindow(cfg)
                         el.CB(); return true
                     end; return false
                 end
-                sec._nY=sec._nY+BTH+3; table.insert(sec.Elems,el); recalcH(); return el
+                sec._nY=sec._nY+BTH+4; table.insert(sec.Elems,el); recalcH(); return el
             end
 
             function sec:CreateLabel(txt)
-                local el={}; el.Type="Label"; el.D={}; el._h=FS+4
-                local x,y=sec._x+4,sec._nY
+                local el={}; el.Type="Label"; el.D={}; el._h=FS+6
+                local x,y=sec._x+6,sec._nY
                 el._ax=x; el._ay=y; el._aw=ew
-                el.D.lbl=cr("Text",{Text=txt or "",Size=FS,Font=Drawing.Fonts.UI,Color=T.Dim,Outline=true,OutlineColor=Color3.new(0,0,0),Position=Vector2.new(x,y),Visible=isAct,ZIndex=elZ})
+                if #sec.Elems > 0 then el.D.div=addDivider(sec,y-2) end
+                el.D.lbl=cr("Text",{Text=txt or "",Size=FS,Font=Drawing.Fonts.UI,Color=T.Dim,Outline=true,OutlineColor=T.TextShadow,Position=Vector2.new(x,y+2),Visible=isAct,ZIndex=elZ+1})
                 el._click=function() return false end
                 el.SetText=function(_,t) el.D.lbl.Text=t end
-                sec._nY=sec._nY+el._h+3; table.insert(sec.Elems,el); recalcH(); return el
+                sec._nY=sec._nY+el._h+4; table.insert(sec.Elems,el); recalcH(); return el
             end
 
             function sec:CreateKeybind(ecfg)
@@ -433,45 +478,47 @@ function Library:CreateWindow(cfg)
                 el.Value=ecfg.Default or Enum.KeyCode.Unknown
                 el.CB=ecfg.Callback or function()end; el.Flag=ecfg.Flag
                 el.D={}; el._h=EH; el._listening=false
-                local x,y=sec._x+4,sec._nY
-                local kbW=math.floor(60*S)
+                local x,y=sec._x+6,sec._nY
+                local kbW=math.floor(64*SC)
                 el._ax=x; el._ay=y; el._aw=ew; el._kbW=kbW
-                el.D.lbl=cr("Text",{Text=el.Name,Size=FS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=Color3.new(0,0,0),Position=Vector2.new(x,y+2),Visible=isAct,ZIndex=elZ})
-                el.D.kbg=cr("Square",{Position=Vector2.new(x+ew-kbW,y),Size=Vector2.new(kbW,EH),Color=T.ElemBg,Filled=true,Visible=isAct,ZIndex=elZ})
-                el.D.kbdr=cr("Square",{Position=Vector2.new(x+ew-kbW,y),Size=Vector2.new(kbW,EH),Color=T.ElemBorder,Filled=false,Thickness=1,Visible=isAct,ZIndex=elZ+1})
+                if #sec.Elems > 0 then el.D.div=addDivider(sec,y-2) end
+                el.D.lbl=cr("Text",{Text=el.Name,Size=FS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=T.TextShadow,Position=Vector2.new(x,y+3),Visible=isAct,ZIndex=elZ+1})
+                el.D.kbg=cr("Square",{Position=Vector2.new(x+ew-kbW,y+1),Size=Vector2.new(kbW,EH-2),Color=T.ElemBg,Filled=true,Visible=isAct,ZIndex=elZ})
+                el.D.kbdr=cr("Square",{Position=Vector2.new(x+ew-kbW,y+1),Size=Vector2.new(kbW,EH-2),Color=T.ElemBorder,Filled=false,Thickness=1,Visible=isAct,ZIndex=elZ+2})
                 local kn=el.Value==Enum.KeyCode.Unknown and "None" or el.Value.Name
-                el.D.ktx=cr("Text",{Text=kn,Size=FSS,Font=Drawing.Fonts.UI,Color=T.Dim,Outline=true,OutlineColor=Color3.new(0,0,0),Position=Vector2.new(x+ew-kbW+math.floor(kbW/2),y+3),Center=true,Visible=isAct,ZIndex=elZ+2})
+                el.D.ktx=cr("Text",{Text="["..kn.."]",Size=FSS,Font=Drawing.Fonts.UI,Color=T.Dim,Outline=true,OutlineColor=T.TextShadow,Position=Vector2.new(x+ew-kbW+math.floor(kbW/2),y+4),Center=true,Visible=isAct,ZIndex=elZ+3})
                 el._click=function(pos)
                     if ib(pos,Vector2.new(el._ax+el._aw-el._kbW,el._ay),Vector2.new(el._kbW,EH)) then
-                        el._listening=true; el.D.ktx.Text="..."; el.D.ktx.Color=T.Accent; return true
+                        el._listening=true; el.D.ktx.Text="[...]"; el.D.ktx.Color=T.Accent; return true
                     end; return false
                 end
                 el._key=function(kc)
                     if not el._listening then return false end
-                    if kc==Enum.KeyCode.Escape then el.Value=Enum.KeyCode.Unknown; el.D.ktx.Text="None"
-                    else el.Value=kc; el.D.ktx.Text=kc.Name end
+                    if kc==Enum.KeyCode.Escape then el.Value=Enum.KeyCode.Unknown; el.D.ktx.Text="[None]"
+                    else el.Value=kc; el.D.ktx.Text="["..kc.Name.."]" end
                     el.D.ktx.Color=T.Dim; el._listening=false
                     if el.Flag then Library.Flags[el.Flag]=el.Value end; el.CB(el.Value); return true
                 end
-                sec._nY=sec._nY+EH+3; table.insert(sec.Elems,el); recalcH()
+                sec._nY=sec._nY+EH+4; table.insert(sec.Elems,el); recalcH()
                 if el.Flag then Library.Flags[el.Flag]=el.Value end; return el
             end
 
             function sec:CreateColorPicker(ecfg)
                 ecfg=ecfg or {}
                 local el={}; el.Type="Color"; el.Name=ecfg.Name or "Color"
-                el.Value=ecfg.Default or Color3.fromRGB(120,80,200)
+                el.Value=ecfg.Default or Color3.fromRGB(130,90,210)
                 el.CB=ecfg.Callback or function()end; el.Flag=ecfg.Flag
                 el.D={}; el._h=EH
-                local x,y=sec._x+4,sec._nY
-                local cpS=math.floor(14*S)
+                local x,y=sec._x+6,sec._nY
+                local cpS=math.floor(16*SC)
                 el._ax=x; el._ay=y; el._aw=ew
-                el.D.lbl=cr("Text",{Text=el.Name,Size=FS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=Color3.new(0,0,0),Position=Vector2.new(x,y+2),Visible=isAct,ZIndex=elZ})
-                el.D.cbox=cr("Square",{Position=Vector2.new(x+ew-cpS-2,y+2),Size=Vector2.new(cpS,cpS),Color=el.Value,Filled=true,Visible=isAct,ZIndex=elZ+1})
-                el.D.cbdr=cr("Square",{Position=Vector2.new(x+ew-cpS-2,y+2),Size=Vector2.new(cpS,cpS),Color=T.ElemBorder,Filled=false,Thickness=1,Visible=isAct,ZIndex=elZ+2})
+                if #sec.Elems > 0 then el.D.div=addDivider(sec,y-2) end
+                el.D.lbl=cr("Text",{Text=el.Name,Size=FS,Font=Drawing.Fonts.UI,Color=T.Text,Outline=true,OutlineColor=T.TextShadow,Position=Vector2.new(x,y+3),Visible=isAct,ZIndex=elZ+1})
+                el.D.cbdr=cr("Square",{Position=Vector2.new(x+ew-cpS-2,y+2),Size=Vector2.new(cpS+2,cpS+2),Color=T.ElemBorder,Filled=false,Thickness=1,Visible=isAct,ZIndex=elZ+3})
+                el.D.cbox=cr("Square",{Position=Vector2.new(x+ew-cpS-1,y+3),Size=Vector2.new(cpS,cpS),Color=el.Value,Filled=true,Visible=isAct,ZIndex=elZ+2})
                 el._click=function() return false end
                 el.SetColor=function(_,c) el.Value=c; el.D.cbox.Color=c; if el.Flag then Library.Flags[el.Flag]=c end; el.CB(c) end
-                sec._nY=sec._nY+EH+3; table.insert(sec.Elems,el); recalcH()
+                sec._nY=sec._nY+EH+4; table.insert(sec.Elems,el); recalcH()
                 if el.Flag then Library.Flags[el.Flag]=el.Value end; return el
             end
 
@@ -517,7 +564,7 @@ local function onBegan(input)
         local w=Library.Windows[i]
         if not w.Visible then continue end
         if not (IsMobile and Library.MobileLocked) then
-            local tp=w.D.tbg.Position; local ts=Vector2.new(w.Size.X,TTH)
+            local tp=w.D.tbg.Position; local ts=Vector2.new(w.Size.X-4,TTH)
             if ib(pos,tp,ts) then w._drag=true; w._dragOff=pos-w.Pos; return end
         end
         for _,tab in ipairs(w.Tabs) do if tab._click(pos) then return end end
