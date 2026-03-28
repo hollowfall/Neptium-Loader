@@ -102,14 +102,13 @@ function Library:CreateWatermark(cfg)
     local txt = cfg.Text or "Library"
     self._wmGameName = cfg.GameName or ""
     self._wmAutoUpdate = cfg.AutoUpdate ~= false
-    local initTxt = txt
-    if self._wmGameName ~= "" then initTxt = txt .. " | " .. self._wmGameName end
-    if self._wmAutoUpdate then initTxt = initTxt .. " | FPS: 0 | Ping: 0ms" end
+    self._wmBaseText = txt
+    if self._wmGameName ~= "" then self._wmBaseText = txt .. " | " .. self._wmGameName end
+    local initTxt = self._wmBaseText
     local tmp = Drawing.new("Text"); tmp.Text=initTxt; tmp.Size=FSL; tmp.Font=Drawing.Fonts.UI
     local tw = tmp.TextBounds.X; tmp:Remove()
     local wmW=tw+32; local wmH=FSL+14; local wx=12; local wy=topInset+10
     self._wm = {}
-    self._wmBaseText = txt
     self._wm.bg = cr("Square",{Position=Vector2.new(wx,wy),Size=Vector2.new(wmW,wmH),Color=T.WmBg,Filled=true,Visible=true,ZIndex=50000})
     self._wm.bdr = cr("Square",{Position=Vector2.new(wx,wy),Size=Vector2.new(wmW,wmH),Color=T.WinBorder,Filled=false,Thickness=1,Visible=true,ZIndex=50001})
     self._wm.bdrIn = cr("Square",{Position=Vector2.new(wx+1,wy+1),Size=Vector2.new(wmW-2,wmH-2),Color=T.WinBorderInner,Filled=false,Thickness=1,Visible=true,ZIndex=50001})
@@ -138,15 +137,16 @@ function Library:_updateWatermarkAuto()
         self._fps = self._fpsCount
         self._fpsCount = 0
         self._fpsTime = now
+        local ping = 0
+        pcall(function() ping = math.floor(Players.LocalPlayer:GetNetworkPing() * 1000) end)
+        local txt = self._wmBaseText .. " | " .. self._fps .. " fps | " .. ping .. "ms"
+        self._wm.lbl.Text = txt
+        local tw = self._wm.lbl.TextBounds.X; local nw = tw + 32
+        self._wm.bg.Size = Vector2.new(nw, self._wm.bg.Size.Y)
+        self._wm.bdr.Size = Vector2.new(nw, self._wm.bdr.Size.Y)
+        self._wm.bdrIn.Size = Vector2.new(nw - 2, self._wm.bdrIn.Size.Y)
+        self._wm.acc.To = Vector2.new(self._wm.acc.From.X + nw, self._wm.acc.From.Y)
     end
-    local ping = 0
-    pcall(function() ping = math.floor(Players.LocalPlayer:GetNetworkPing() * 1000) end)
-    local parts = {self._wmBaseText}
-    if self._wmGameName ~= "" then table.insert(parts, self._wmGameName) end
-    table.insert(parts, "FPS: " .. tostring(self._fps))
-    table.insert(parts, "Ping: " .. tostring(ping) .. "ms")
-    local fullTxt = table.concat(parts, " | ")
-    self:UpdateWatermark(fullTxt)
 end
 
 function Library:_mkMobile()
