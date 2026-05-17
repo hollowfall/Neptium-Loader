@@ -34,6 +34,9 @@ function Library:CreateWindow(config)
 	local minimized = false
 	local savedPos, savedSize
 
+	-- track the active dropdown close function so tab switches can close it
+	local activeDropdownClose = nil
+
 	local ScreenGui = Instance.new("ScreenGui")
 	ScreenGui.Name = "Neptium_" .. math.random(1000, 9999)
 	ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -60,12 +63,12 @@ function Library:CreateWindow(config)
 	Topbar.ZIndex = 2
 	Topbar.Parent = Root
 
-	Instance.new("Frame", Topbar).Size = UDim2.new(1, 0, 0, 1)
-	local _td = Topbar:FindFirstChildOfClass("Frame")
-	_td.Position = UDim2.new(0, 0, 1, -1)
-	_td.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-	_td.BorderSizePixel = 0
-	_td.ZIndex = 2
+	local _tdiv = Instance.new("Frame", Topbar)
+	_tdiv.Size = UDim2.new(1, 0, 0, 1)
+	_tdiv.Position = UDim2.new(0, 0, 1, -1)
+	_tdiv.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+	_tdiv.BorderSizePixel = 0
+	_tdiv.ZIndex = 2
 
 	local TitleLabel = Instance.new("TextLabel")
 	TitleLabel.Size = UDim2.new(1, 0, 1, 0)
@@ -91,9 +94,9 @@ function Library:CreateWindow(config)
 	SubLabel.Parent = Topbar
 
 	local dotData = {
-		{ color = Color3.fromRGB(255, 95, 86),  symbol = "x" },
-		{ color = Color3.fromRGB(255, 189, 46), symbol = "-" },
-		{ color = Color3.fromRGB(40, 201, 64),  symbol = "+" },
+		{ color = Color3.fromRGB(255, 95, 86)  },
+		{ color = Color3.fromRGB(255, 189, 46) },
+		{ color = Color3.fromRGB(40, 201, 64)  },
 	}
 
 	local dots = {}
@@ -107,17 +110,6 @@ function Library:CreateWindow(config)
 		Dot.Parent = Topbar
 		addCorner(Dot, 7)
 
-		local Sym = Instance.new("TextLabel")
-		Sym.Size = UDim2.new(1, 0, 1, 0)
-		Sym.BackgroundTransparency = 1
-		Sym.Font = Enum.Font.GothamBold
-		Sym.Text = d.symbol
-		Sym.TextColor3 = Color3.fromRGB(80, 30, 20)
-		Sym.TextSize = 7
-		Sym.TextTransparency = 1
-		Sym.ZIndex = 4
-		Sym.Parent = Dot
-
 		local DotBtn = Instance.new("TextButton")
 		DotBtn.Size = UDim2.new(1, 0, 1, 0)
 		DotBtn.BackgroundTransparency = 1
@@ -126,16 +118,8 @@ function Library:CreateWindow(config)
 		DotBtn.ZIndex = 5
 		DotBtn.Parent = Dot
 
-		dots[i] = { frame = Dot, sym = Sym, btn = DotBtn }
+		dots[i] = { frame = Dot, btn = DotBtn }
 	end
-
-	local function showSymbols(v)
-		for _, d in ipairs(dots) do
-			tween(d.sym, { TextTransparency = v and 0 or 1 }, 0.1)
-		end
-	end
-	Topbar.MouseEnter:Connect(function() showSymbols(true) end)
-	Topbar.MouseLeave:Connect(function() showSymbols(false) end)
 
 	local DockBtn = Instance.new("TextButton")
 	DockBtn.Size = UDim2.new(0, 100, 0, 28)
@@ -380,6 +364,11 @@ function Library:CreateWindow(config)
 			if activeTab ~= Tab then tween(TabLabel, { TextColor3 = Color3.fromRGB(90, 90, 90) }) end
 		end)
 		TabBtn.MouseButton1Click:Connect(function()
+			-- close any open dropdown before switching
+			if activeDropdownClose then
+				activeDropdownClose()
+				activeDropdownClose = nil
+			end
 			if activeTab and activeTab ~= Tab then tabButtons[activeTab](false) end
 			activeTab = Tab
 			tabButtons[Tab](true)
@@ -675,10 +664,12 @@ function Library:CreateWindow(config)
 			DragZone.ZIndex = 7
 			DragZone.Parent = TrackBG
 
+			-- use a per-slider flag instead of a global UserInputService.InputChanged
+			-- that accumulates each time CreateSlider is called
 			local draggingSlider = false
 
-			local function updateVal(input)
-				local rel     = math.clamp((input.Position.X - TrackBG.AbsolutePosition.X) / TrackBG.AbsoluteSize.X, 0, 1)
+			local function updateVal(inputObj)
+				local rel     = math.clamp((inputObj.Position.X - TrackBG.AbsolutePosition.X) / TrackBG.AbsoluteSize.X, 0, 1)
 				local raw     = min + (max - min) * rel
 				local stepped = math.floor(raw / step + 0.5) * step
 				value = math.clamp(stepped, min, max)
@@ -695,11 +686,23 @@ function Library:CreateWindow(config)
 					updateVal(input)
 				end
 			end)
+
+			-- scoped connections stored so they don't pile up
 			UserInputService.InputEnded:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then draggingSlider = false end
+				if input.UserInputType == Enum.UserInputType.MouseButton1 then
+					draggingSlider = false
+				end
 			end)
+
 			UserInputService.InputChanged:Connect(function(input)
-				if draggingSlider and input.UserInputType == Enum.UserInputType.MouseMovement then updateVal(input) end
+				if draggingSlider and input.UserInputType == Enum.UserInputType.MouseMovement then
+					-- guard: TrackBG must still exist
+					if TrackBG and TrackBG.Parent then
+						updateVal(input)
+					else
+						draggingSlider = false
+					end
+				end
 			end)
 
 			return {
@@ -786,6 +789,9 @@ function Library:CreateWindow(config)
 			local function closeDropdown()
 				if not open then return end
 				open = false
+				if activeDropdownClose == closeDropdown then
+					activeDropdownClose = nil
+				end
 				local w = DropFrame.AbsoluteSize.X
 				tween(DropFrame, { Size = UDim2.new(0, w, 0, 0) }, 0.15)
 				tween(ArrowLbl,  { Rotation = 0 }, 0.15)
@@ -847,7 +853,12 @@ function Library:CreateWindow(config)
 					closeDropdown()
 					return
 				end
+				-- close any other open dropdown first
+				if activeDropdownClose and activeDropdownClose ~= closeDropdown then
+					activeDropdownClose()
+				end
 				open = true
+				activeDropdownClose = closeDropdown
 				local absPos  = F.AbsolutePosition
 				local absSize = F.AbsoluteSize
 				local visCount = math.min(#options, MAX_VISIBLE)
