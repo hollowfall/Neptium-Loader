@@ -25,7 +25,7 @@ local Win = Neptium:CreateWindow({
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `Title` | string | `"Neptium"` | Window title shown in the topbar |
-| `Subtitle` | string | `"v2.2"` | Smaller text next to the title |
+| `Subtitle` | string | `"v1.0"` | Smaller text next to the title |
 | `MinimizeKey` | KeyCode | `RightShift` | Key that toggles minimize |
 
 The three dots in the top-left corner work like macOS window controls. Red closes the GUI, yellow minimizes it to a small dock button on the left side of the screen. Clicking that button restores the window.
