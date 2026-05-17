@@ -1,103 +1,93 @@
-# Neptium UI Library v2.1
+# Neptium
 
-A clean, black/white minimalist UI library for Roblox exploit scripts.  
-macOS-style traffic light window controls, animated dock minimize, and keyboard keybind support.
+A minimal, dark UI library for Roblox exploits. Tabs, toggles, sliders, dropdowns, inputs, buttons — all in one require.
 
 ---
 
-## Quick Start
+## Loading
 
 ```lua
-local UI = Library:CreateWindow({
-    Title       = "MyScript",
-    Subtitle    = "v1.0",
-    MinimizeKey = Enum.KeyCode.RightShift, -- optional, default: RightShift
+local Neptium = loadstring(game:HttpGet("https://raw.githubusercontent.com/hollowfall/Neptium-Loader/refs/heads/Sc/Source.lua"))()
+```
+
+---
+
+## Creating a Window
+
+```lua
+local Win = Neptium:CreateWindow({
+    Title = "My Script",
+    Subtitle = "v1.0",
+    MinimizeKey = Enum.KeyCode.RightShift
 })
-
-local Tab = UI:CreateTab("Main", "⚙")
 ```
 
-Paste the full library source at the top of your script, then use the API below.
-
----
-
-## CreateWindow
-
-```lua
-Library:CreateWindow(config)
-```
-
-| Field | Type | Default | Description |
+| Option | Type | Default | Description |
 |---|---|---|---|
-| `Title` | string | `"Neptium"` | Window title shown in the topbar center |
-| `Subtitle` | string | `"v2.1"` | Small text shown to the right of the title |
-| `MinimizeKey` | KeyCode | `RightShift` | Keyboard key to toggle minimize/restore |
+| `Title` | string | `"Neptium"` | Window title shown in the topbar |
+| `Subtitle` | string | `"v2.2"` | Smaller text next to the title |
+| `MinimizeKey` | KeyCode | `RightShift` | Key that toggles minimize |
 
-**Returns:** `Win` — used to create tabs.
-
----
-
-## Traffic Light Buttons
-
-The three macOS-style dots in the top-left corner do:
-
-| Dot | Color | Action |
-|---|---|---|
-| Red | `#FF5F56` | Destroy the entire ScreenGui |
-| Yellow | `#FFBD2E` | Minimize to a small dock button |
-| Green | `#28C940` | Reserved (placeholder, hook as needed) |
-
-Symbols (`✕` `−` `+`) appear on hover. The dot area is on the left side of the topbar.
-
----
-
-## Minimize & Restore
-
-When minimized the full window collapses into a small floating pill button labeled with your `Title`.  
-Click that pill **or** press the `MinimizeKey` to restore it with a smooth scale-in animation.
-
-To change the keybind:
-
-```lua
-Library:CreateWindow({
-    MinimizeKey = Enum.KeyCode.Insert,
-})
-```
-
-Any valid `Enum.KeyCode` works.
+The three dots in the top-left corner work like macOS window controls. Red closes the GUI, yellow minimizes it to a small dock button on the left side of the screen. Clicking that button restores the window.
 
 ---
 
 ## Tabs
 
 ```lua
-local Tab = Win:CreateTab("Tab Name", "icon")
+local Tab = Win:CreateTab("Combat", "sword")
 ```
 
-`icon` is any string — emoji or short text displayed on the sidebar button.  
-The first tab created is auto-selected.
+The second argument is an icon label (optional). Tabs appear in the sidebar. The first tab created is selected by default.
 
 ---
 
 ## Elements
 
-All elements are created on a `Tab` object.
+All elements are methods on a Tab object.
+
+---
+
+### Button
+
+```lua
+Tab:CreateButton("Teleport", "Teleports to the nearest player", function()
+    -- callback
+end)
+```
+
+The description is optional. If you skip it, just pass the callback as the second argument:
+
+```lua
+Tab:CreateButton("Teleport", function()
+    -- callback
+end)
+```
+
+---
 
 ### Toggle
 
 ```lua
-Tab:CreateToggle(name, desc, default, callback)
+local toggle = Tab:CreateToggle("God Mode", "Makes you unkillable", false, function(state)
+    print(state) -- true or false
+end)
 ```
 
-`desc` is optional. `default` is `true`/`false`. `callback(value: boolean)`.
+Description and default value are both optional. The argument order is flexible — if you pass a boolean as the second argument it's treated as the default value, not the description.
 
 ```lua
-local myToggle = Tab:CreateToggle("Speed Hack", "Makes you fast", false, function(v)
-    -- v is true or false
+-- No description, default true
+local toggle = Tab:CreateToggle("Fly", true, function(state)
+    -- state = true/false
 end)
+```
 
-myToggle:Set(true)   -- force on
-myToggle:Get()       -- returns current state
+**Methods:**
+
+```lua
+toggle:Set(true)   -- set the value programmatically
+toggle:Get()       -- returns current state
 ```
 
 ---
@@ -105,44 +95,30 @@ myToggle:Get()       -- returns current state
 ### Slider
 
 ```lua
-Tab:CreateSlider(name, config, callback)
-```
-
-Config table:
-
-| Key | Default | Description |
-|---|---|---|
-| `Min` | `0` | Minimum value |
-| `Max` | `100` | Maximum value |
-| `Default` | `Min` | Starting value |
-| `Step` | `1` | Snap increment |
-| `Suffix` | `""` | Unit label appended to the value (e.g. `" px"`) |
-
-```lua
-local mySlider = Tab:CreateSlider("FOV", {
-    Min = 10, Max = 360, Default = 90, Step = 5, Suffix = "°"
-}, function(v)
-    -- v is the current number
+local slider = Tab:CreateSlider("Walk Speed", {
+    Min = 0,
+    Max = 500,
+    Default = 16,
+    Step = 1,
+    Suffix = " speed"
+}, function(value)
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = value
 end)
-
-mySlider:Set(180)
-mySlider:Get()
 ```
 
----
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `Min` | number | `0` | Minimum value |
+| `Max` | number | `100` | Maximum value |
+| `Default` | number | `Min` | Starting value |
+| `Step` | number | `1` | Snap increment |
+| `Suffix` | string | `""` | Text appended to the value label |
 
-### Button
+**Methods:**
 
 ```lua
-Tab:CreateButton(name, desc, callback)
-```
-
-`desc` is optional. Click fires `callback()`.
-
-```lua
-Tab:CreateButton("Teleport", "Go to spawn", function()
-    -- your logic
-end)
+slider:Set(100)   -- set the value
+slider:Get()      -- returns current value
 ```
 
 ---
@@ -150,19 +126,19 @@ end)
 ### Dropdown
 
 ```lua
-Tab:CreateDropdown(name, options, default, callback)
+local dropdown = Tab:CreateDropdown("Team", {"Attackers", "Defenders", "Spectators"}, "Attackers", function(selected)
+    print(selected)
+end)
 ```
 
-`options` is a table of strings. `default` is the initially selected string.
+The third argument (default selection) is optional and falls back to the first option.
+
+**Methods:**
 
 ```lua
-local dd = Tab:CreateDropdown("Mode", {"A", "B", "C"}, "A", function(v)
-    print(v)
-end)
-
-dd:Set("B")
-dd:Get()
-dd:Refresh({"X", "Y"})  -- replace option list at runtime
+dropdown:Set("Defenders")                        -- change selection
+dropdown:Get()                                   -- returns current selection
+dropdown:Refresh({"Option A", "Option B"})       -- replace the options list
 ```
 
 ---
@@ -170,18 +146,20 @@ dd:Refresh({"X", "Y"})  -- replace option list at runtime
 ### Input
 
 ```lua
-Tab:CreateInput(name, placeholder, callback)
+local input = Tab:CreateInput("Username", "Enter username...", function(text, enterPressed)
+    if enterPressed then
+        print(text)
+    end
+end)
 ```
 
-`callback(text: string, enterPressed: boolean)` fires on focus lost.
+The callback fires when the textbox loses focus. `enterPressed` is `true` if the user pressed Enter, `false` if they clicked away.
+
+**Methods:**
 
 ```lua
-local inp = Tab:CreateInput("Name", "Enter your name...", function(text, enter)
-    if enter then print(text) end
-end)
-
-inp:Get()
-inp:Set("hello")
+input:Get()          -- returns current text
+input:Set("hello")   -- set text programmatically
 ```
 
 ---
@@ -189,91 +167,76 @@ inp:Set("hello")
 ### Label
 
 ```lua
-Tab:CreateLabel(text)
+local label = Tab:CreateLabel("Status: idle")
+label:SetText("Status: running")
 ```
 
-Static display text. Returns `{ SetText(text) }`.
-
-```lua
-local lbl = Tab:CreateLabel("Status: idle")
-lbl:SetText("Status: active")
-```
+A read-only text row. Use `:SetText()` to update it at runtime.
 
 ---
 
 ### Separator
 
 ```lua
-Tab:CreateSeparator()          -- plain line
-Tab:CreateSeparator("SECTION") -- line with uppercase label
+Tab:CreateSeparator("Settings")
+Tab:CreateSeparator()   -- line with no text
 ```
 
----
-
-## Hooking the Green Button
-
-The green dot currently just prints a placeholder. To hook it yourself, find this block in the source and replace the `print`:
-
-```lua
-dots[3].btn.MouseButton1Click:Connect(function()
-    -- your maximize / fullscreen logic here
-end)
-```
-
----
-
-## Destroy the UI
-
-```lua
-for _, gui in ipairs(TargetGui:GetChildren()) do
-    if gui.Name:match("^Neptium_") then gui:Destroy() end
-end
-```
-
-Or use a button:
-
-```lua
-Tab:CreateButton("Close", function()
-    for _, gui in ipairs(TargetGui:GetChildren()) do
-        if gui.Name:match("^Neptium_") then gui:Destroy() end
-    end
-end)
-```
+Thin divider line used to group elements visually. The text is optional and renders uppercase.
 
 ---
 
 ## Full Example
 
 ```lua
-local UI = Library:CreateWindow({
-    Title       = "Aimbot",
-    Subtitle    = "v1.0",
-    MinimizeKey = Enum.KeyCode.Delete,
+local Neptium = loadstring(game:HttpGet("YOUR_RAW_URL_HERE"))()
+
+local Win = Neptium:CreateWindow({
+    Title = "Aimbot",
+    Subtitle = "v1.0",
+    MinimizeKey = Enum.KeyCode.RightShift
 })
 
-local Combat = UI:CreateTab("Combat", "⚔")
+local Combat = Win:CreateTab("Combat")
+local Misc = Win:CreateTab("Misc")
 
-Combat:CreateToggle("Silent Aim", nil, false, function(enabled)
-    -- toggle logic
+Combat:CreateSeparator("Aimbot")
+
+local toggle = Combat:CreateToggle("Enabled", false, function(state)
+    print("aimbot:", state)
 end)
 
-Combat:CreateSlider("Smoothness", {
-    Min = 1, Max = 100, Default = 50, Suffix = "%"
-}, function(v)
-    -- update smoothness
+local fov = Combat:CreateSlider("FOV", {
+    Min = 10,
+    Max = 500,
+    Default = 120,
+    Suffix = " px"
+}, function(value)
+    print("fov:", value)
 end)
 
-Combat:CreateSeparator("TARGETING")
-
-Combat:CreateDropdown("Hitpart", {"Head", "Torso", "Random"}, "Head", function(part)
-    -- update hitpart
+local smoothing = Combat:CreateSlider("Smoothing", {
+    Min = 0,
+    Max = 1,
+    Default = 0.5,
+    Step = 0.01
+}, function(value)
+    print("smoothing:", value)
 end)
 
-local Misc = UI:CreateTab("Misc", "⚙")
+Combat:CreateSeparator("Target")
 
-Misc:CreateButton("Destroy UI", function()
-    for _, gui in ipairs(TargetGui:GetChildren()) do
-        if gui.Name:match("^Neptium_") then gui:Destroy() end
-    end
+local part = Combat:CreateDropdown("Hitbox", {"Head", "Torso", "Closest"}, "Head", function(selected)
+    print("target:", selected)
+end)
+
+Misc:CreateButton("Rejoin", function()
+    game:GetService("TeleportService"):Teleport(game.PlaceId)
+end)
+
+local statusLabel = Misc:CreateLabel("Status: idle")
+
+Misc:CreateButton("Update Status", function()
+    statusLabel:SetText("Status: running")
 end)
 ```
