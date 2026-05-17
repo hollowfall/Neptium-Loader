@@ -38,6 +38,7 @@ function Library:CreateWindow(config)
 	ScreenGui.Name = "Neptium_" .. math.random(1000, 9999)
 	ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	ScreenGui.ResetOnSpawn = false
+	ScreenGui.DisplayOrder = 999
 	ScreenGui.Parent = TargetGui
 
 	local Root = Instance.new("Frame")
@@ -46,10 +47,19 @@ function Library:CreateWindow(config)
 	Root.Position = UDim2.new(0.5, -290, 0.5, -200)
 	Root.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 	Root.BorderSizePixel = 0
-	Root.ClipsDescendants = true
+	Root.ClipsDescendants = false
 	Root.Parent = ScreenGui
 	addCorner(Root, 9)
 	addStroke(Root, Color3.fromRGB(45, 45, 45), 1)
+
+	local RootClip = Instance.new("Frame")
+	RootClip.Name = "RootClip"
+	RootClip.Size = UDim2.new(1, 0, 1, 0)
+	RootClip.BackgroundTransparency = 1
+	RootClip.ClipsDescendants = true
+	RootClip.BorderSizePixel = 0
+	RootClip.Parent = Root
+	addCorner(RootClip, 9)
 
 	local Topbar = Instance.new("Frame")
 	Topbar.Name = "Topbar"
@@ -57,7 +67,7 @@ function Library:CreateWindow(config)
 	Topbar.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 	Topbar.BorderSizePixel = 0
 	Topbar.ZIndex = 2
-	Topbar.Parent = Root
+	Topbar.Parent = RootClip
 
 	local TopDivider = Instance.new("Frame")
 	TopDivider.Size = UDim2.new(1, 0, 0, 1)
@@ -229,7 +239,7 @@ function Library:CreateWindow(config)
 	Sidebar.BackgroundColor3 = Color3.fromRGB(13, 13, 13)
 	Sidebar.BorderSizePixel = 0
 	Sidebar.ZIndex = 2
-	Sidebar.Parent = Root
+	Sidebar.Parent = RootClip
 
 	local SideDivider = Instance.new("Frame")
 	SideDivider.Size = UDim2.new(0, 1, 1, 0)
@@ -255,8 +265,17 @@ function Library:CreateWindow(config)
 	ContentArea.Size = UDim2.new(1, -130, 1, -40)
 	ContentArea.Position = UDim2.new(0, 130, 0, 40)
 	ContentArea.BackgroundTransparency = 1
-	ContentArea.ClipsDescendants = true
+	ContentArea.ClipsDescendants = false
+	ContentArea.ZIndex = 3
 	ContentArea.Parent = Root
+
+	local ContentClip = Instance.new("Frame")
+	ContentClip.Name = "ContentClip"
+	ContentClip.Size = UDim2.new(1, 0, 1, 0)
+	ContentClip.BackgroundTransparency = 1
+	ContentClip.ClipsDescendants = true
+	ContentClip.ZIndex = 3
+	ContentClip.Parent = ContentArea
 
 	local activeTab  = nil
 	local tabButtons = {}
@@ -268,6 +287,7 @@ function Library:CreateWindow(config)
 		TabBtn.Size = UDim2.new(1, 0, 0, 34)
 		TabBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
 		TabBtn.BackgroundTransparency = 1
+		TabBtn.AutoButtonColor = false
 		TabBtn.Text = ""
 		TabBtn.BorderSizePixel = 0
 		TabBtn.ZIndex = 3
@@ -314,9 +334,10 @@ function Library:CreateWindow(config)
 		Page.BorderSizePixel = 0
 		Page.ScrollBarThickness = 2
 		Page.ScrollBarImageColor3 = Color3.fromRGB(55, 55, 55)
+		Page.ScrollingDirection = Enum.ScrollingDirection.Y
 		Page.Visible = false
-		Page.ZIndex = 2
-		Page.Parent = ContentArea
+		Page.ZIndex = 3
+		Page.Parent = ContentClip
 
 		local PageList = Instance.new("UIListLayout")
 		PageList.SortOrder = Enum.SortOrder.LayoutOrder
@@ -471,6 +492,7 @@ function Library:CreateWindow(config)
 			local Btn = Instance.new("TextButton")
 			Btn.Size = UDim2.new(1, 0, 1, 0)
 			Btn.BackgroundTransparency = 1
+			Btn.AutoButtonColor = false
 			Btn.Text = ""
 			Btn.ZIndex = 5
 			Btn.Parent = F
@@ -561,6 +583,7 @@ function Library:CreateWindow(config)
 			local Btn = Instance.new("TextButton")
 			Btn.Size = UDim2.new(1, 0, 1, 0)
 			Btn.BackgroundTransparency = 1
+			Btn.AutoButtonColor = false
 			Btn.Text = ""
 			Btn.ZIndex = 6
 			Btn.Parent = F
@@ -642,6 +665,7 @@ function Library:CreateWindow(config)
 			DragZone.Size = UDim2.new(1, 0, 0, 22)
 			DragZone.Position = UDim2.new(0, 0, 0, -9)
 			DragZone.BackgroundTransparency = 1
+			DragZone.AutoButtonColor = false
 			DragZone.Text = ""
 			DragZone.ZIndex = 7
 			DragZone.Parent = TrackBG
@@ -693,14 +717,14 @@ function Library:CreateWindow(config)
 			Wrapper.Size = UDim2.new(1, 0, 0, 36)
 			Wrapper.BackgroundTransparency = 1
 			Wrapper.ClipsDescendants = false
-			Wrapper.ZIndex = 3
+			Wrapper.ZIndex = 20
 			Wrapper.Parent = Page
 
 			local F = Instance.new("Frame")
 			F.Size = UDim2.new(1, 0, 0, 36)
 			F.BackgroundColor3 = Color3.fromRGB(17, 17, 17)
 			F.BorderSizePixel = 0
-			F.ZIndex = 3
+			F.ZIndex = 20
 			F.Parent = Wrapper
 			addCorner(F, 6)
 			addStroke(F, Color3.fromRGB(32, 32, 32), 1)
@@ -714,7 +738,7 @@ function Library:CreateWindow(config)
 			NameLbl.TextColor3 = Color3.fromRGB(215, 215, 215)
 			NameLbl.TextSize = 13
 			NameLbl.TextXAlignment = Enum.TextXAlignment.Left
-			NameLbl.ZIndex = 4
+			NameLbl.ZIndex = 21
 			NameLbl.Parent = F
 
 			local SelLbl = Instance.new("TextLabel")
@@ -726,7 +750,7 @@ function Library:CreateWindow(config)
 			SelLbl.TextColor3 = Color3.fromRGB(120, 120, 120)
 			SelLbl.TextSize = 12
 			SelLbl.TextXAlignment = Enum.TextXAlignment.Right
-			SelLbl.ZIndex = 4
+			SelLbl.ZIndex = 21
 			SelLbl.Parent = F
 
 			local ArrowLbl = Instance.new("TextLabel")
@@ -737,7 +761,7 @@ function Library:CreateWindow(config)
 			ArrowLbl.Text = "v"
 			ArrowLbl.TextColor3 = Color3.fromRGB(75, 75, 75)
 			ArrowLbl.TextSize = 11
-			ArrowLbl.ZIndex = 4
+			ArrowLbl.ZIndex = 21
 			ArrowLbl.Parent = F
 
 			local DropFrame = Instance.new("Frame")
@@ -746,9 +770,9 @@ function Library:CreateWindow(config)
 			DropFrame.BackgroundColor3 = Color3.fromRGB(17, 17, 17)
 			DropFrame.BorderSizePixel = 0
 			DropFrame.ClipsDescendants = true
-			DropFrame.ZIndex = 10
+			DropFrame.ZIndex = 50
 			DropFrame.Visible = false
-			DropFrame.Parent = Wrapper
+			DropFrame.Parent = ScreenGui
 			addCorner(DropFrame, 6)
 			addStroke(DropFrame, Color3.fromRGB(38, 38, 38), 1)
 
@@ -758,12 +782,18 @@ function Library:CreateWindow(config)
 			DropScroll.BorderSizePixel = 0
 			DropScroll.ScrollBarThickness = 2
 			DropScroll.ScrollBarImageColor3 = Color3.fromRGB(55, 55, 55)
-			DropScroll.ZIndex = 10
+			DropScroll.ZIndex = 51
 			DropScroll.Parent = DropFrame
 
 			local DropLayout = Instance.new("UIListLayout")
 			DropLayout.SortOrder = Enum.SortOrder.LayoutOrder
 			DropLayout.Parent = DropScroll
+
+			local function getDropAbsPos()
+				local fAbsPos = F.AbsolutePosition
+				local fAbsSize = F.AbsoluteSize
+				return UDim2.new(0, fAbsPos.X, 0, fAbsPos.Y + fAbsSize.Y + 4)
+			end
 
 			local function buildOptions()
 				for _, c in ipairs(DropScroll:GetChildren()) do
@@ -775,12 +805,13 @@ function Library:CreateWindow(config)
 					Opt.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
 					Opt.BackgroundTransparency = opt == selected and 0 or 1
 					Opt.BorderSizePixel = 0
+					Opt.AutoButtonColor = false
 					Opt.Font = Enum.Font.GothamSemibold
 					Opt.Text = "  " .. opt
 					Opt.TextColor3 = opt == selected and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(140, 140, 140)
 					Opt.TextSize = 12
 					Opt.TextXAlignment = Enum.TextXAlignment.Left
-					Opt.ZIndex = 11
+					Opt.ZIndex = 52
 					Opt.Parent = DropScroll
 
 					Opt.MouseEnter:Connect(function()
@@ -794,7 +825,7 @@ function Library:CreateWindow(config)
 						SelLbl.Text = opt
 						buildOptions()
 						open = false
-						tween(DropFrame, { Size = UDim2.new(1, 0, 0, 0) }, 0.18)
+						tween(DropFrame, { Size = UDim2.new(DropFrame.Size.X.Scale, DropFrame.Size.X.Offset, 0, 0) }, 0.18)
 						tween(ArrowLbl,  { Rotation = 0 }, 0.18)
 						task.delay(0.18, function() DropFrame.Visible = false end)
 						Wrapper.Size = UDim2.new(1, 0, 0, 36)
@@ -808,21 +839,24 @@ function Library:CreateWindow(config)
 			local MainBtn = Instance.new("TextButton")
 			MainBtn.Size = UDim2.new(1, 0, 1, 0)
 			MainBtn.BackgroundTransparency = 1
+			MainBtn.AutoButtonColor = false
 			MainBtn.Text = ""
-			MainBtn.ZIndex = 5
+			MainBtn.ZIndex = 22
 			MainBtn.Parent = F
 
 			MainBtn.MouseButton1Click:Connect(function()
 				open = not open
 				local count = math.min(#options, 5)
 				if open then
+					local absPos = getDropAbsPos()
+					local absWidth = F.AbsoluteSize.X
+					DropFrame.Position = absPos
+					DropFrame.Size = UDim2.new(0, absWidth, 0, 0)
 					DropFrame.Visible = true
-					DropFrame.Size = UDim2.new(1, 0, 0, 0)
-					tween(DropFrame, { Size = UDim2.new(1, 0, 0, count * 30) }, 0.2)
+					tween(DropFrame, { Size = UDim2.new(0, absWidth, 0, count * 30) }, 0.2)
 					tween(ArrowLbl,  { Rotation = 180 }, 0.2)
-					Wrapper.Size = UDim2.new(1, 0, 0, 36 + count * 30 + 8)
 				else
-					tween(DropFrame, { Size = UDim2.new(1, 0, 0, 0) }, 0.18)
+					tween(DropFrame, { Size = UDim2.new(DropFrame.Size.X.Scale, DropFrame.Size.X.Offset, 0, 0) }, 0.18)
 					tween(ArrowLbl,  { Rotation = 0 }, 0.18)
 					task.delay(0.18, function() DropFrame.Visible = false end)
 					Wrapper.Size = UDim2.new(1, 0, 0, 36)
