@@ -189,7 +189,7 @@ Thin divider line used to group elements visually. The text is optional and rend
 ## Full Example
 
 ```lua
-local Neptium = loadstring(game:HttpGet("YOUR_RAW_URL_HERE"))()
+local Neptium = loadstring(game:HttpGet("https://raw.githubusercontent.com/hollowfall/Neptium-Loader/refs/heads/Sc/Source.lua"))()
 
 local Win = Neptium:CreateWindow({
     Title = "Aimbot",
